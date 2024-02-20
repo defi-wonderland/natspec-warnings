@@ -43,6 +43,7 @@ export class Processor {
 
   selectEligibleNodes(contract: ContractDefinition): NodeToProcess[] {
     return [
+      contract,
       ...contract.vEnums,
       ...contract.vErrors,
       ...contract.vEvents,

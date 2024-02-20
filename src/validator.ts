@@ -19,6 +19,11 @@ export class Validator {
   }
 
   validate(node: NodeToProcess, natspec: Natspec): string[] {
+    // Process contract-level natspec
+    if (node instanceof ContractDefinition) {
+      return this.config.contractNatspec ? this.validateContractNatspec(natspec) : [];
+    }
+
     // Ignore fallback and receive
     if (matchesFunctionKind(node, 'receive') || matchesFunctionKind(node, 'fallback')) {
       return [];
@@ -132,5 +137,14 @@ export class Validator {
     _requiresInheritdoc &&= node.parent instanceof ContractDefinition && node.parent.kind === 'contract';
 
     return _requiresInheritdoc;
+  }
+
+  /**
+   * Validate the natspec of a contract
+   * @param {Natspec} natspec - The natspec of the contract
+   * @returns {string[]} - The list of alerts
+   */
+  private validateContractNatspec(natspec: Natspec): string[] {
+    return natspec.tags.some((t) => t.name === 'notice') ? [] : [`@notice is missing`];
   }
 }

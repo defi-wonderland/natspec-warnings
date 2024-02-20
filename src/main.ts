@@ -63,6 +63,11 @@ function getArguments(): Config {
         description: 'True if constructor natspec is mandatory.',
         default: false,
       },
+      contractNatspec: {
+        type: 'boolean',
+        description: 'True if contract natspec is mandatory.',
+        default: false,
+      },
     })
     .config()
     .default('config', 'natspec-smells.config')

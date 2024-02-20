@@ -1,4 +1,5 @@
 import {
+  ContractDefinition,
   EnumDefinition,
   ErrorDefinition,
   EventDefinition,
@@ -14,6 +15,7 @@ export interface Config {
   root: string; // Optional: Project root directory.
   enforceInheritdoc: boolean; // Optional: True if all external and public functions should have @inheritdoc.
   constructorNatspec: boolean; // Optional: True if the constructor should have natspec.
+  contractNatspec: boolean; // Optional: True if the contract should have natspec.
 }
 
 export interface NatspecDefinition {
@@ -42,6 +44,7 @@ export interface ASTNodeRaw {
 }
 
 export type NodeToProcess =
+  | ContractDefinition
   | FunctionDefinition
   | EnumDefinition
   | ErrorDefinition
