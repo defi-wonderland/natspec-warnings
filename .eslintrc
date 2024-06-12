@@ -1,0 +1,15 @@
+{
+  "plugins": ["eslint-plugin-jsdoc"],
+  "extends": ["plugin:eslint-plugin-jsdoc/recommended"],
+  "ignorePatterns": ["dist", ".eslintrc.cjs"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 9,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "env": {
+    "node": true,
+    "es6": true
+  }
+}

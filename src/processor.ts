@@ -12,6 +12,12 @@ export interface IWarning {
 export class Processor {
   constructor(private validator: Validator) {}
 
+  /**
+   * Goes through all functions, modifiers, state variables, structs, enums, errors and events
+   * of the source files and validates their natspec
+   * @param {SourceUnit[]} sourceUnits - The list of source files
+   * @returns {Promise<IWarning[]>} - The list of resulting warnings
+   */
   async processSources(sourceUnits: SourceUnit[]): Promise<IWarning[]> {
     const warnings: IWarning[] = [];
 
@@ -41,6 +47,12 @@ export class Processor {
     return warnings;
   }
 
+  /**
+   * Selects the nodes that are eligible for natspec validation:
+   * Enums, Errors, Events, Functions, Modifiers, State Variables, Structs
+   * @param {ContractDefinition} contract - The contract source
+   * @returns {NodeToProcess[]} - The list of nodes to process
+   */
   selectEligibleNodes(contract: ContractDefinition): NodeToProcess[] {
     return [
       ...contract.vEnums,
@@ -53,11 +65,24 @@ export class Processor {
     ];
   }
 
+  /**
+   * Validates the natspec of the node
+   * @param {NodeToProcess} node - The node to process
+   * @returns {string[]} - The list of warning messages
+   */
   validateNatspec(node: NodeToProcess): string[] {
     const nodeNatspec = parseNodeNatspec(node);
     return this.validator.validate(node, nodeNatspec);
   }
 
+  /**
+   * Generates a warning location string
+   * @param {string} filePath - Path of the file with the warning
+   * @param {string} fileContent - The content of the file
+   * @param {string} contractName - The name of the contract
+   * @param {NodeToProcess} node - The node with the warning
+   * @returns {string} - The formatted location
+   */
   formatLocation(filePath: string, fileContent: string, contractName: string, node: NodeToProcess): string {
     // the constructor function definition does not have a name, but it has kind: 'constructor'
     const nodeName = node instanceof FunctionDefinition ? node.name || node.kind : node.name;

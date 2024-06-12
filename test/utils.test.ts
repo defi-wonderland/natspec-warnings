@@ -1,8 +1,17 @@
+import child_process from 'child_process';
 import fs from 'fs/promises';
+import fstest from 'fs';
 import path from 'path';
 import * as utils from '../src/utils';
 import { mockFoundryConfig, mockFunctionDefinition } from './utils/mocks';
 import { FunctionKind } from 'solc-typed-ast';
+import { defaultFunctions } from '../src/constants';
+
+jest.mock('child_process', () => ({
+  exec: jest.fn().mockImplementation(() => {
+    throw new Error();
+  }),
+}));
 
 describe('Utils', () => {
   describe('getSolidityFilesAbsolutePaths', () => {
@@ -59,6 +68,20 @@ describe('Utils', () => {
       expect(output).toEqual(['config']);
     });
 
+    it('should return forge auto remappings if fails', async () => {
+      const spyGetRemappingsFromFile = jest.spyOn(utils, 'getRemappingsFromFile');
+      spyGetRemappingsFromFile.mockRejectedValueOnce(new Error());
+
+      const spyGetRemappingsFromConfig = jest.spyOn(utils, 'getRemappingsFromConfig');
+      spyGetRemappingsFromConfig.mockRejectedValueOnce(new Error());
+
+      const spy = jest.spyOn(utils, 'getRemappingsFromForge');
+      spy.mockResolvedValueOnce(['forge']);
+
+      const output = await utils.getRemappings('');
+      expect(output).toEqual(['forge']);
+    });
+
     it('should return empty array if all fails', async () => {
       const output = await utils.getRemappings('wrong/path');
       expect(output).toEqual([]);
@@ -77,11 +100,6 @@ describe('Utils', () => {
   describe('getRemappingsFromConfig', () => {
     it('should return correct remappings from config', async () => {
       const remappings = new Map<string[], string[]>();
-
-      remappings.set(
-        [], // Expected value
-        [''] // Remappings strings that when parsed should return the expected value
-      );
 
       remappings.set(
         ['ds-test/=lib/ds-test/src/'], // Expected value
@@ -137,6 +155,23 @@ describe('Utils', () => {
         }
       }
     });
+
+    it('should revert with no remappings', async () => {
+      fs.readFile = jest.fn().mockResolvedValueOnce(mockFoundryConfig(''));
+      await expect(utils.getRemappingsFromConfig('')).rejects.toThrow();
+    });
+  });
+
+  describe('getRemappingsFromForge', () => {
+    it('should return correct remappings from file', async () => {
+      const mockRemappingsList = ['test/contracts/=contracts/', 'contract/contracts/=contracts/'];
+      jest.spyOn(child_process, 'exec').mockImplementationOnce((_, __, callback) => {
+        callback?.(null, mockRemappingsList.join('\n'), '');
+        return {} as child_process.ChildProcess;
+      });
+      const remappings = await utils.getRemappingsFromForge();
+      expect(remappings).toEqual(mockRemappingsList);
+    });
   });
 
   describe('sanitizeRemapping', () => {
@@ -184,6 +219,222 @@ describe('Utils', () => {
         2: 3,
         a: 4,
       });
+    });
+  });
+
+  describe('processConfig', () => {
+    it('should use a valid config', async () => {
+      fs.readFile = jest.fn().mockResolvedValueOnce(
+        JSON.stringify({
+          include: './contracts/**/*.sol',
+        })
+      );
+      const config = await utils.processConfig(path.join(__dirname, './valid.config.json'));
+
+      // The default settings should be applied
+      expect(config).toEqual({
+        root: './',
+        include: './contracts/**/*.sol',
+        exclude: '',
+        inheritdoc: true,
+        functions: defaultFunctions,
+        modifiers: {
+          tags: {
+            dev: false,
+            notice: true,
+            param: true,
+          },
+        },
+        events: {
+          tags: {
+            dev: false,
+            notice: true,
+            param: true,
+          },
+        },
+        errors: {
+          tags: {
+            dev: false,
+            notice: true,
+            param: true,
+          },
+        },
+        structs: {
+          tags: {
+            dev: false,
+            notice: true,
+            param: true,
+          },
+        },
+        constructorNatspec: false,
+      });
+    });
+
+    it('should revert with an invalid config', async () => {
+      fs.readFile = jest.fn().mockResolvedValueOnce(
+        JSON.stringify({
+          include: './contracts/**/*.sol',
+          exclude: 123,
+        })
+      );
+      await expect(utils.processConfig(path.join(__dirname, './invalid.config.json'))).rejects.toThrow();
+    });
+
+    it('should overwrite defaults if values are set', async () => {
+      fs.readFile = jest.fn().mockResolvedValueOnce(
+        JSON.stringify({
+          include: './contracts/**/*.sol',
+          exclude: './contracts/ignored.sol',
+          root: './contracts',
+          inheritdoc: false,
+        })
+      );
+      const config = await utils.processConfig(path.join(__dirname, './valid.config.json'));
+
+      expect(config).toEqual({
+        root: './contracts',
+        include: './contracts/**/*.sol',
+        exclude: './contracts/ignored.sol',
+        inheritdoc: false,
+        functions: defaultFunctions,
+        modifiers: {
+          tags: {
+            dev: false,
+            notice: true,
+            param: true,
+          },
+        },
+        events: {
+          tags: {
+            dev: false,
+            notice: true,
+            param: true,
+          },
+        },
+        errors: {
+          tags: {
+            dev: false,
+            notice: true,
+            param: true,
+          },
+        },
+        structs: {
+          tags: {
+            dev: false,
+            notice: true,
+            param: true,
+          },
+        },
+        constructorNatspec: false,
+      });
+    });
+
+    it('should set custom parameters for functions', async () => {
+      fs.readFile = jest.fn().mockResolvedValueOnce(
+        JSON.stringify({
+          include: './contracts/**/*.sol',
+          functions: {
+            internal: {
+              tags: {
+                dev: true,
+                notice: true,
+                return: true,
+                param: true,
+              },
+            },
+          },
+          constructorNatspec: true,
+        })
+      );
+      const config = await utils.processConfig(path.join(__dirname, './valid.config.json'));
+
+      expect(config).toEqual({
+        root: './',
+        include: './contracts/**/*.sol',
+        exclude: '',
+        inheritdoc: true,
+        functions: {
+          internal: {
+            tags: {
+              dev: true,
+              notice: true,
+              return: true,
+              param: true,
+            },
+          },
+          external: {
+            tags: {
+              dev: false,
+              notice: true,
+              return: true,
+              param: true,
+            },
+          },
+          public: {
+            tags: {
+              dev: false,
+              notice: true,
+              return: true,
+              param: true,
+            },
+          },
+          private: {
+            tags: {
+              dev: false,
+              notice: true,
+              return: true,
+              param: true,
+            },
+          },
+        },
+        modifiers: {
+          tags: {
+            dev: false,
+            notice: true,
+            param: true,
+          },
+        },
+        events: {
+          tags: {
+            dev: false,
+            notice: true,
+            param: true,
+          },
+        },
+        errors: {
+          tags: {
+            dev: false,
+            notice: true,
+            param: true,
+          },
+        },
+        structs: {
+          tags: {
+            dev: false,
+            notice: true,
+            param: true,
+          },
+        },
+        constructorNatspec: true,
+      });
+    });
+
+    it('should revert if a function block is incomplete', async () => {
+      fs.readFile = jest.fn().mockResolvedValueOnce(
+        JSON.stringify({
+          include: './contracts/**/*.sol',
+          functions: {
+            internal: {
+              tags: {
+                dev: true,
+                notice: true,
+              },
+            },
+          },
+        })
+      );
+
+      await expect(utils.processConfig(path.join(__dirname, './invalid.config.json'))).rejects.toThrow();
     });
   });
 });

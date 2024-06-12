@@ -20,7 +20,7 @@ Want to quickly check if your natspec smells?
 Just run:
 
 ```
-npx @defi-wonderland/natspec-smells --include src --exclude "src/**/*.sol" "(test|scripts)/**/*.sol"
+npx @defi-wonderland/natspec-smells --include "src/**/*.sol" --exclude "(test|scripts)/**/*.sol"
 ```
 
 > [!NOTE]
