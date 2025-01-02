@@ -424,4 +424,16 @@ describe('Parser', () => {
       );
     });
   });
+
+  describe('Contract with latest Solidity version', () => {
+    beforeAll(async () => {
+      const compileResult = await getFileCompiledSource('test/contracts/LatestVersion.sol');
+      contract = compileResult.vContracts.find(({ name }) => name === 'LatestVersion')!;
+    });
+
+    it('should compile contract with latest Solidity version', async () => {
+      expect(contract).toBeDefined();
+      expect(contract.name).toBe('LatestVersion');
+    });
+  });
 });

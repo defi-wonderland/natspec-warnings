@@ -3382,10 +3382,10 @@ slice-ansi@^5.0.0:
     ansi-styles "^6.0.0"
     is-fullwidth-code-point "^4.0.0"
 
-solc-typed-ast@18.2.0:
-  version "18.2.0"
-  resolved "https://registry.yarnpkg.com/solc-typed-ast/-/solc-typed-ast-18.2.0.tgz#63917df1174ea1bf3b7c999818fa66aa719edd4b"
-  integrity sha512-RgIjnk6KNxhCseeeArwEPMtliLMDNDgi+2OBibHd7BIV4MDxutA77PJK1+gYvokm4g/iwp8BOJMa2yI3NsqlZg==
+solc-typed-ast@18.2.4:
+  version "18.2.4"
+  resolved "https://registry.yarnpkg.com/solc-typed-ast/-/solc-typed-ast-18.2.4.tgz#eecdc23be946c7b93aa9f6fcb75a27954e5ce411"
+  integrity sha512-HTkr6b2WMSJ3pgVRf5us/UWjCvfSlvE1yUcHna+miSPerkyppGnZQaJWqrcECa7ZjxmSV7H2buUDKux9hR4ivg==
   dependencies:
     axios "^1.6.8"
     commander "^12.0.0"

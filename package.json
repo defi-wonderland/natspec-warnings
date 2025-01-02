@@ -1,6 +1,6 @@
 {
   "name": "@defi-wonderland/natspec-smells",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Automatically identify missing or incomplete natspec",
   "homepage": "https://github.com/defi-wonderland/natspec-smells#readme",
   "repository": {
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "fast-glob": "3.3.2",
-    "solc-typed-ast": "18.2.0",
+    "solc-typed-ast": "18.2.4",
     "yargs": "17.7.2"
   },
   "devDependencies": {
